@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int      @id @default(autoincrement())
+  email             String   @unique
+  password          String
+  role              Role     @default(CUSTOMER)
+  status            Status   @default(ACTIVE) // PENDING only for SALES
+  createdAt         DateTime @default(now())
+
+  // Common fields
+  firstName         String?
+  lastName          String?
+  phone             String?
+  address           String?
+
+  // Seller-specific fields
+  storeName         String?
+  businessType      String?
+  pharmacyLicense   String?
+  licenseDocUrl     String?
+  taxId             String?
+  storeLogoUrl      String?
+  businessAddress   String?
+  ownerIdProofUrl   String?
+  proofOfAddressUrl String?
+  medicalCertUrl    String?
+  bankName          String?
+  accountHolder     String?
+  accountNumber     String?
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+  SALES
+}
+
+enum Status {
+  ACTIVE
+  PENDING
+  SUSPENDED
+}

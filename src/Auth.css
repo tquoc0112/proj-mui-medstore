@@ -8,7 +8,7 @@
   position: relative;
   overflow: hidden;
 
-  /* New: Smaller size */
+  /* Smaller size */
   width: 70%;
   height: 70%;
   margin: auto;
@@ -62,6 +62,29 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
+.form-box input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.form-box button {
+  margin-top: 15px;
+  background: #1a73e8;
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.form-box button:hover {
+  background: #155cc4;
+}
+
 /* ✅ OVERLAY (BLUE PANEL) */
 .overlay-container {
   position: absolute;
@@ -90,13 +113,13 @@
   transform: translateX(0);
   transition: transform 0.6s ease-in-out;
 
-  /* ✅ CURVED EDGES */
-  border-radius: 0 20px 20px 0;
+  /* ✅ Bo cong theo hướng panel trắng */
+  border-radius:  80px 80px 80;
 }
 
 .auth-container.sign-up-mode .overlay {
   transform: translateX(50%);
-  border-radius: 20px 0 0 20px; /* flips curved edges */
+  border-radius: 80px 80 80 80px; /* ✅ Lật cong khi panel xanh đổi bên */
 }
 
 /* ✅ OVERLAY PANELS */
@@ -130,6 +153,30 @@
 
 .auth-container.sign-up-mode .overlay-right {
   transform: translateX(20%);
+}
+
+.overlay-panel h1 {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.overlay-panel p {
+  font-size: 14px;
+  margin: 15px 0;
+}
+
+.overlay-panel button {
+  background: transparent;
+  color: #fff;
+  border: 1px solid #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.overlay-panel button:hover {
+  background: #ffffff33;
 }
 
 /* ✅ RESPONSIVE FIX */

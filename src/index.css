@@ -1,20 +1,6 @@
-/* index.css - Cleaned for AuthPage */
-:root {
-  font-family: "Roboto", Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: light;
-  background-color: #ffffff; /* ✅ White background */
-}
-
 body {
   margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background-color: #f4f6f8; /* ✅ Light medical blue-gray */
-}
-
-button {
-  font-family: inherit;
-  cursor: pointer;
+  padding: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #f0f2f5;
 }

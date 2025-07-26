@@ -18,14 +18,23 @@ export default function AuthPage() {
     storeName: "",
     businessType: "",
     pharmacyLicense: "",
+    licenseDocUrl: "",
     taxId: "",
+    storeLogoUrl: "",
     businessAddress: "",
+    ownerIdProofUrl: "",
+    proofOfAddressUrl: "",
+    medicalCertUrl: "",
+    bankName: "",
+    accountHolder: "",
+    accountNumber: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ✅ REGISTER
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
@@ -34,7 +43,7 @@ export default function AuthPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/register", {
+      const res = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -47,16 +56,17 @@ export default function AuthPage() {
       if (!res.ok) throw new Error(data.error || "Registration failed");
 
       alert(data.message);
-      setIsSignUpMode(false);
+      setIsSignUpMode(false); // Quay lại chế độ Sign In sau khi đăng ký thành công
     } catch (err: any) {
       alert(err.message);
     }
   };
 
+  // ✅ LOGIN
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/login", {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -70,6 +80,16 @@ export default function AuthPage() {
 
       alert("Login successful");
       localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.role);
+
+      // ✅ Chuyển hướng sau login (tùy role)
+      if (data.role === "SALES") {
+        alert("Welcome Seller!");
+        // window.location.href = "/dashboard-seller"; // Bạn có thể thay bằng route thực tế
+      } else {
+        alert("Welcome Customer!");
+        // window.location.href = "/home"; // Route dành cho Customer
+      }
     } catch (err: any) {
       alert(err.message);
     }
@@ -77,7 +97,7 @@ export default function AuthPage() {
 
   return (
     <div className={`auth-container ${isSignUpMode ? "sign-up-mode" : ""}`}>
-      {/* SIGN IN FORM */}
+      {/* ✅ SIGN IN FORM */}
       <div className="form-container sign-in-container">
         <form className="form-box" onSubmit={handleLogin}>
           <h1>Sign in</h1>
@@ -99,94 +119,72 @@ export default function AuthPage() {
         </form>
       </div>
 
-      {/* SIGN UP FORM */}
+      {/* ✅ SIGN UP FORM */}
       <div className="form-container sign-up-container">
         <form className="form-box" onSubmit={handleRegister}>
           <h1>Create Account</h1>
 
-         {/* ✅ ROLE TOGGLE WITH ANIMATION */}
-<div
-  style={{
-    position: "relative",
-    display: "flex",
-    justifyContent: "space-between",
-    width: "220px",
-    margin: "0 auto 15px auto",
-    background: "#f0f0f0",
-    borderRadius: "30px",
-    padding: "3px",
-    overflow: "hidden",
-    height: "40px", // Chiều cao cố định
-  }}
->
-  {/* Blue moving panel */}
-  <div
-    style={{
-      position: "absolute",
-      top: "3px",
-      left: role === "CUSTOMER" ? "3px" : "calc(50% + 3px)",
-      width: "calc(50% - 6px)",
-      height: "calc(100% - 6px)",
-      background: "linear-gradient(to right, #1a73e8, #3b8dff)",
-      borderRadius: "30px",
-      transition: "all 0.4s ease",
-      zIndex: 1,
-    }}
-  />
+          {/* ✅ ROLE TOGGLE */}
+          <div
+            style={{
+              position: "relative",
+              display: "flex",
+              justifyContent: "space-between",
+              width: "220px",
+              margin: "0 auto 15px auto",
+              background: "#f0f0f0",
+              borderRadius: "30px",
+              padding: "3px",
+              overflow: "hidden",
+              height: "40px",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: "3px",
+                left: role === "CUSTOMER" ? "3px" : "calc(50% + 3px)",
+                width: "calc(50% - 6px)",
+                height: "calc(100% - 6px)",
+                background: "linear-gradient(to right, #1a73e8, #3b8dff)",
+                borderRadius: "30px",
+                transition: "all 0.4s ease",
+                zIndex: 1,
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setRole("CUSTOMER")}
+              style={{
+                flex: 1,
+                zIndex: 2,
+                background: "transparent",
+                border: "none",
+                color: role === "CUSTOMER" ? "#fff" : "#000",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+            >
+              CUSTOMER
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("SALES")}
+              style={{
+                flex: 1,
+                zIndex: 2,
+                background: "transparent",
+                border: "none",
+                color: role === "SALES" ? "#fff" : "#000",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+            >
+              SELLER
+            </button>
+          </div>
 
-  {/* Customer Button */}
-  <button
-    type="button"
-    onClick={() => setRole("CUSTOMER")}
-    style={{
-      flex: 1,
-      zIndex: 2,
-      background: "transparent",
-      border: "none",
-      color: role === "CUSTOMER" ? "#fff" : "#000",
-      fontWeight: "bold",
-      cursor: "pointer",
-
-      // ✅ Căn giữa chuẩn nhất
-      display: "flex",
-      alignItems: "center", // Căn giữa dọc
-      justifyContent: "center", // Căn giữa ngang
-      lineHeight: "normal", // Xóa line-height mặc định của button
-      padding: 0, // Xóa padding mặc định
-      height: "30%",
-    }}
-  >
-    CUSTOMER
-  </button>
-
-  {/* Seller Button */}
-  <button
-    type="button"
-    onClick={() => setRole("SALES")}
-    style={{
-      flex: 1,
-      zIndex: 2,
-      background: "transparent",
-      border: "none",
-      color: role === "SALES" ? "#fff" : "#000",
-      fontWeight: "bold",
-      cursor: "pointer",
-
-      // ✅ Căn giữa chuẩn nhất
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      lineHeight: "normal",
-      padding: 0,
-      height: "30%",
-    }}
-  >
-    SELLER
-  </button>
-</div>
-
-
-          {/* Common Fields */}
+          {/* ✅ Common Fields */}
           <input
             type="text"
             placeholder="First Name"
@@ -223,7 +221,7 @@ export default function AuthPage() {
             required
           />
 
-          {/* Seller-Specific Fields */}
+          {/* ✅ Seller-Specific Fields */}
           {role === "SALES" && (
             <>
               <input
@@ -282,7 +280,7 @@ export default function AuthPage() {
         </form>
       </div>
 
-      {/* BLUE PANEL */}
+      {/* ✅ BLUE PANEL */}
       <div className="overlay-container">
         <div className="overlay">
           <div className="overlay-panel overlay-left">

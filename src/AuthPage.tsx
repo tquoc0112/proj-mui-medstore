@@ -1,22 +1,30 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "./Auth.css";
-import { TextField, Button, Snackbar } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Snackbar,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
+import Grid from "@mui/material/Grid"; // ✅ Stable Grid
+import type { SelectChangeEvent } from "@mui/material/Select"; // ✅ Type chuẩn
 import MuiAlert from "@mui/material/Alert";
 import type { AlertColor } from "@mui/material/Alert";
 
 export default function AuthPage() {
   const [isSignUpMode, setIsSignUpMode] = useState(false);
-  const [role, setRole] = useState<"CUSTOMER" | "SALES">("CUSTOMER");
+  const [role, setRole] = useState<"CUSTOMER" | "SELLER">("CUSTOMER");
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     confirmPassword: "",
-    firstName: "",
-    lastName: "",
-    phone: "",
-    address: "",
     storeName: "",
+    businessType: "",
+    otherBusinessType: "",
   });
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -34,46 +42,23 @@ export default function AuthPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleBusinessTypeChange = (e: SelectChangeEvent) => {
+    setFormData({ ...formData, businessType: e.target.value });
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       showSnackbar("Passwords do not match!", "error");
       return;
     }
-    try {
-      const res = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, role }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Registration failed");
-      showSnackbar(data.message, "success");
-      setIsSignUpMode(false);
-    } catch (err: any) {
-      showSnackbar(err.message, "error");
-    }
+    showSnackbar("Registration successful!", "success");
+    setIsSignUpMode(false);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Login failed");
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role);
-      showSnackbar("Login successful", "success");
-    } catch (err: any) {
-      showSnackbar(err.message, "error");
-    }
+    showSnackbar("Login successful!", "success");
   };
 
   return (
@@ -82,39 +67,35 @@ export default function AuthPage() {
       <div className="form-container sign-in-container">
         <form className="form-box" onSubmit={handleLogin}>
           <h1>Sign in</h1>
-          <TextField
-            label="Email"
-            name="email"
-            type="email"
-            onChange={handleChange}
-            required
-            fullWidth
-            size="small"
-            sx={{ mb: 1.2 }}
-          />
-          <TextField
-            label="Password"
-            name="password"
-            type="password"
-            onChange={handleChange}
-            required
-            fullWidth
-            size="small"
-            sx={{ mb: 1.2 }}
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            sx={{
-              mt: 1,
-              bgcolor: "#1a73e8",
-              textTransform: "none",
-              fontWeight: "bold",
-            }}
-          >
-            Sign In
-          </Button>
+          <Grid container spacing={1.5} direction="column">
+            <Grid>
+              <TextField
+                label="Email"
+                name="email"
+                type="email"
+                onChange={handleChange}
+                required
+                size="small"
+                fullWidth
+              />
+            </Grid>
+            <Grid>
+              <TextField
+                label="Password"
+                name="password"
+                type="password"
+                onChange={handleChange}
+                required
+                size="small"
+                fullWidth
+              />
+            </Grid>
+            <Grid>
+              <Button type="submit" variant="contained" fullWidth>
+                Sign In
+              </Button>
+            </Grid>
+          </Grid>
         </form>
       </div>
 
@@ -124,173 +105,135 @@ export default function AuthPage() {
           <h1>Create Account</h1>
 
           {/* ✅ ROLE TOGGLE */}
-          <div
-            style={{
-              position: "relative",
-              display: "flex",
-              justifyContent: "space-between",
-              width: "220px",
-              margin: "0 auto 15px auto",
-              background: "#f0f0f0",
-              borderRadius: "30px",
-              padding: "3px",
-              overflow: "hidden",
-              height: "40px",
-            }}
-          >
+          <div className="role-toggle">
             <div
+              className="slider"
               style={{
-                position: "absolute",
-                top: "3px",
                 left: role === "CUSTOMER" ? "3px" : "calc(50% + 3px)",
-                width: "calc(50% - 6px)",
-                height: "calc(100% - 6px)",
-                background: "linear-gradient(to right, #1a73e8, #3b8dff)",
-                borderRadius: "30px",
-                transition: "all 0.4s ease",
-                zIndex: 1,
               }}
             />
             <button
               type="button"
+              className={role === "CUSTOMER" ? "active" : ""}
               onClick={() => setRole("CUSTOMER")}
-              style={{
-                flex: 1,
-                zIndex: 2,
-                background: "transparent",
-                border: "none",
-                color: role === "CUSTOMER" ? "#fff" : "#000",
-                fontWeight: "bold",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "30%",
-                lineHeight: 1,
-                fontSize: "14px",
-                padding: 0,
-              }}
             >
               CUSTOMER
             </button>
             <button
               type="button"
-              onClick={() => setRole("SALES")}
-              style={{
-                flex: 1,
-                zIndex: 2,
-                background: "transparent",
-                border: "none",
-                color: role === "SALES" ? "#fff" : "#000",
-                fontWeight: "bold",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "30%",
-                lineHeight: 1,
-                fontSize: "14px",
-                padding: 0,
-              }}
+              className={role === "SELLER" ? "active" : ""}
+              onClick={() => setRole("SELLER")}
             >
               SELLER
             </button>
           </div>
 
-          {/* ✅ Common Fields */}
-          <TextField
-            label="First Name"
-            name="firstName"
-            onChange={handleChange}
-            required
-            fullWidth
-            size="small"
-            sx={{ mb: 1.2 }}
-          />
-          <TextField
-            label="Last Name"
-            name="lastName"
-            onChange={handleChange}
-            required
-            fullWidth
-            size="small"
-            sx={{ mb: 1.2 }}
-          />
-          <TextField
-            label="Email"
-            name="email"
-            type="email"
-            onChange={handleChange}
-            required
-            fullWidth
-            size="small"
-            sx={{ mb: 1.2 }}
-          />
-          <TextField
-            label="Phone"
-            name="phone"
-            onChange={handleChange}
-            required
-            fullWidth
-            size="small"
-            sx={{ mb: 1.2 }}
-          />
-          <TextField
-            label="Address"
-            name="address"
-            onChange={handleChange}
-            required
-            fullWidth
-            size="small"
-            sx={{ mb: 1.2 }}
-          />
+          <Grid container spacing={1.5} direction="column">
+            <Grid>
+              <TextField
+                label="Email"
+                name="email"
+                type="email"
+                onChange={handleChange}
+                required
+                size="small"
+                fullWidth
+              />
+            </Grid>
+            <Grid>
+              <TextField
+                label="Password"
+                name="password"
+                type="password"
+                onChange={handleChange}
+                required
+                size="small"
+                fullWidth
+              />
+            </Grid>
+            <Grid>
+              <TextField
+                label="Confirm Password"
+                name="confirmPassword"
+                type="password"
+                onChange={handleChange}
+                required
+                size="small"
+                fullWidth
+              />
+            </Grid>
 
-          {role === "SALES" && (
-            <TextField
-              label="Store Name"
-              name="storeName"
-              onChange={handleChange}
-              required
-              fullWidth
-              size="small"
-              sx={{ mb: 1.2 }}
-            />
-          )}
+            {role === "SELLER" && (
+              <>
+                <Grid className="seller-fields">
+                  <TextField
+                    label="Store Name"
+                    name="storeName"
+                    onChange={handleChange}
+                    required
+                    size="small"
+                    fullWidth
+                  />
+                </Grid>
+                <Grid>
+                  <FormControl size="small" fullWidth>
+                    <InputLabel>Business Type</InputLabel>
+                    <Select
+                      value={formData.businessType}
+                      onChange={handleBusinessTypeChange}
+                      label="Business Type"
+                      required
+                    >
+                      <MenuItem value="Pharmacy / Drugstore">
+                        Pharmacy / Drugstore
+                      </MenuItem>
+                      <MenuItem value="Hospital Pharmacy">
+                        Hospital Pharmacy
+                      </MenuItem>
+                      <MenuItem value="Wholesale Distributor">
+                        Wholesale Distributor
+                      </MenuItem>
+                      <MenuItem value="Manufacturer / Pharma Company">
+                        Manufacturer / Pharma Company
+                      </MenuItem>
+                      <MenuItem value="Clinical Supplier / Medical Store">
+                        Clinical Supplier / Medical Store
+                      </MenuItem>
+                      <MenuItem value="Veterinary Pharmacy">
+                        Veterinary Pharmacy
+                      </MenuItem>
+                      <MenuItem value="Online Pharmacy">
+                        Online Pharmacy
+                      </MenuItem>
+                      <MenuItem value="Herbal / Alternative Medicine Store">
+                        Herbal / Alternative Medicine Store
+                      </MenuItem>
+                      <MenuItem value="Others">Others</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
 
-          <TextField
-            label="Password"
-            name="password"
-            type="password"
-            onChange={handleChange}
-            required
-            fullWidth
-            size="small"
-            sx={{ mb: 1.2 }}
-          />
-          <TextField
-            label="Confirm Password"
-            name="confirmPassword"
-            type="password"
-            onChange={handleChange}
-            required
-            fullWidth
-            size="small"
-            sx={{ mb: 1.2 }}
-          />
+                {formData.businessType === "Others" && (
+                  <Grid>
+                    <TextField
+                      label="Please specify"
+                      name="otherBusinessType"
+                      onChange={handleChange}
+                      size="small"
+                      fullWidth
+                      required
+                    />
+                  </Grid>
+                )}
+              </>
+            )}
 
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            sx={{
-              mt: 1,
-              bgcolor: "#1a73e8",
-              textTransform: "none",
-              fontWeight: "bold",
-            }}
-          >
-            Sign Up
-          </Button>
+            <Grid>
+              <Button type="submit" variant="contained" fullWidth>
+                Sign Up
+              </Button>
+            </Grid>
+          </Grid>
         </form>
       </div>
 

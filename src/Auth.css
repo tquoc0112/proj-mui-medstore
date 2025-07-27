@@ -1,22 +1,24 @@
+
 /* ✅ MAIN CONTAINER - Smaller and Centered */
 .auth-container {
   background: #f6f5f7;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: calc(100vh - 80px); /* ✅ Cách đều trên dưới */
   position: relative;
   overflow: hidden;
 
-  /* Smaller size */
-  width: 70%;
-  height: 70%;
-  margin: auto;
+  max-width: 900px;   /* ✅ Giới hạn độ rộng tối đa */
+  width: 70%;         /* hoặc 45% nếu muốn nhỏ hơn */
+  height: auto;
+  margin: 10px auto;  /* ✅ Cách đều 4 cạnh ngoài */
+  padding: 30px;
 
-  /* Modern style */
   border-radius: 20px;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
 }
+
 
 /* ✅ FORM CONTAINERS */
 .form-container {
@@ -62,6 +64,7 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* ⚠ Chỉ còn dùng cho input cũ (MUI sẽ bị override nếu giữ nguyên) */
 .form-box input {
   width: 100%;
   padding: 12px;
@@ -113,13 +116,12 @@
   transform: translateX(0);
   transition: transform 0.6s ease-in-out;
 
-  /* ✅ Bo cong theo hướng panel trắng */
-  border-radius:  80px 80px 80;
+  border-radius: 80px 80px 80;
 }
 
 .auth-container.sign-up-mode .overlay {
   transform: translateX(50%);
-  border-radius: 80px 80 80 80px; /* ✅ Lật cong khi panel xanh đổi bên */
+  border-radius: 80px 80 80 80px;
 }
 
 /* ✅ OVERLAY PANELS */
@@ -186,4 +188,16 @@
     height: auto;
     min-height: 80vh;
   }
+}
+
+/* ✅ FIX VIỀN KÉP CHO MUI TEXTFIELD */
+.MuiOutlinedInput-input {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* ✅ KHOẢNG CÁCH GIỮA CÁC TEXTFIELD */
+.MuiTextField-root {
+  margin-bottom: 12px;
 }

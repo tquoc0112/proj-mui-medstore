@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import "./Auth.css";
+import { TextField, Button, Snackbar } from "@mui/material";
+import MuiAlert from "@mui/material/Alert";
+import type { AlertColor } from "@mui/material/Alert";
 
 export default function AuthPage() {
   const [isSignUpMode, setIsSignUpMode] = useState(false);
@@ -13,56 +16,45 @@ export default function AuthPage() {
     lastName: "",
     phone: "",
     address: "",
-
-    // Seller-specific
     storeName: "",
-    businessType: "",
-    pharmacyLicense: "",
-    licenseDocUrl: "",
-    taxId: "",
-    storeLogoUrl: "",
-    businessAddress: "",
-    ownerIdProofUrl: "",
-    proofOfAddressUrl: "",
-    medicalCertUrl: "",
-    bankName: "",
-    accountHolder: "",
-    accountNumber: "",
   });
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>("info");
+
+  const handleSnackbarClose = () => setSnackbarOpen(false);
+  const showSnackbar = (message: string, severity: AlertColor) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ REGISTER
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      showSnackbar("Passwords do not match!", "error");
       return;
     }
-
     try {
       const res = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          role,
-        }),
+        body: JSON.stringify({ ...formData, role }),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Registration failed");
-
-      alert(data.message);
-      setIsSignUpMode(false); // Quay lại chế độ Sign In sau khi đăng ký thành công
+      showSnackbar(data.message, "success");
+      setIsSignUpMode(false);
     } catch (err: any) {
-      alert(err.message);
+      showSnackbar(err.message, "error");
     }
   };
 
-  // ✅ LOGIN
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -74,24 +66,13 @@ export default function AuthPage() {
           password: formData.password,
         }),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed");
-
-      alert("Login successful");
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
-
-      // ✅ Chuyển hướng sau login (tùy role)
-      if (data.role === "SALES") {
-        alert("Welcome Seller!");
-        // window.location.href = "/dashboard-seller"; // Bạn có thể thay bằng route thực tế
-      } else {
-        alert("Welcome Customer!");
-        // window.location.href = "/home"; // Route dành cho Customer
-      }
+      showSnackbar("Login successful", "success");
     } catch (err: any) {
-      alert(err.message);
+      showSnackbar(err.message, "error");
     }
   };
 
@@ -101,21 +82,39 @@ export default function AuthPage() {
       <div className="form-container sign-in-container">
         <form className="form-box" onSubmit={handleLogin}>
           <h1>Sign in</h1>
-          <input
-            type="email"
-            placeholder="Email"
+          <TextField
+            label="Email"
             name="email"
+            type="email"
             onChange={handleChange}
             required
+            fullWidth
+            size="small"
+            sx={{ mb: 1.2 }}
           />
-          <input
-            type="password"
-            placeholder="Password"
+          <TextField
+            label="Password"
             name="password"
+            type="password"
             onChange={handleChange}
             required
+            fullWidth
+            size="small"
+            sx={{ mb: 1.2 }}
           />
-          <button type="submit">Sign In</button>
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{
+              mt: 1,
+              bgcolor: "#1a73e8",
+              textTransform: "none",
+              fontWeight: "bold",
+            }}
+          >
+            Sign In
+          </Button>
         </form>
       </div>
 
@@ -163,6 +162,13 @@ export default function AuthPage() {
                 color: role === "CUSTOMER" ? "#fff" : "#000",
                 fontWeight: "bold",
                 cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "30%",
+                lineHeight: 1,
+                fontSize: "14px",
+                padding: 0,
               }}
             >
               CUSTOMER
@@ -178,6 +184,13 @@ export default function AuthPage() {
                 color: role === "SALES" ? "#fff" : "#000",
                 fontWeight: "bold",
                 cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "30%",
+                lineHeight: 1,
+                fontSize: "14px",
+                padding: 0,
               }}
             >
               SELLER
@@ -185,98 +198,99 @@ export default function AuthPage() {
           </div>
 
           {/* ✅ Common Fields */}
-          <input
-            type="text"
-            placeholder="First Name"
+          <TextField
+            label="First Name"
             name="firstName"
             onChange={handleChange}
             required
+            fullWidth
+            size="small"
+            sx={{ mb: 1.2 }}
           />
-          <input
-            type="text"
-            placeholder="Last Name"
+          <TextField
+            label="Last Name"
             name="lastName"
             onChange={handleChange}
             required
+            fullWidth
+            size="small"
+            sx={{ mb: 1.2 }}
           />
-          <input
-            type="email"
-            placeholder="Email"
+          <TextField
+            label="Email"
             name="email"
+            type="email"
             onChange={handleChange}
             required
+            fullWidth
+            size="small"
+            sx={{ mb: 1.2 }}
           />
-          <input
-            type="text"
-            placeholder="Phone"
+          <TextField
+            label="Phone"
             name="phone"
             onChange={handleChange}
             required
+            fullWidth
+            size="small"
+            sx={{ mb: 1.2 }}
           />
-          <input
-            type="text"
-            placeholder="Address"
+          <TextField
+            label="Address"
             name="address"
             onChange={handleChange}
             required
+            fullWidth
+            size="small"
+            sx={{ mb: 1.2 }}
           />
 
-          {/* ✅ Seller-Specific Fields */}
           {role === "SALES" && (
-            <>
-              <input
-                type="text"
-                placeholder="Store Name"
-                name="storeName"
-                onChange={handleChange}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Business Type"
-                name="businessType"
-                onChange={handleChange}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Pharmacy License"
-                name="pharmacyLicense"
-                onChange={handleChange}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Tax ID"
-                name="taxId"
-                onChange={handleChange}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Business Address"
-                name="businessAddress"
-                onChange={handleChange}
-                required
-              />
-            </>
+            <TextField
+              label="Store Name"
+              name="storeName"
+              onChange={handleChange}
+              required
+              fullWidth
+              size="small"
+              sx={{ mb: 1.2 }}
+            />
           )}
 
-          <input
-            type="password"
-            placeholder="Password"
+          <TextField
+            label="Password"
             name="password"
-            onChange={handleChange}
-            required
-          />
-          <input
             type="password"
-            placeholder="Confirm Password"
-            name="confirmPassword"
             onChange={handleChange}
             required
+            fullWidth
+            size="small"
+            sx={{ mb: 1.2 }}
           />
-          <button type="submit">Sign Up</button>
+          <TextField
+            label="Confirm Password"
+            name="confirmPassword"
+            type="password"
+            onChange={handleChange}
+            required
+            fullWidth
+            size="small"
+            sx={{ mb: 1.2 }}
+          />
+
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{
+              mt: 1,
+              bgcolor: "#1a73e8",
+              textTransform: "none",
+              fontWeight: "bold",
+            }}
+          >
+            Sign Up
+          </Button>
         </form>
       </div>
 
@@ -295,6 +309,22 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
+
+      {/* ✅ SNACKBAR */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <MuiAlert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </MuiAlert>
+      </Snackbar>
     </div>
   );
 }

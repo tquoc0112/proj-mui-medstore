@@ -259,7 +259,7 @@ body {
 .form-box .MuiTextField-root,
 .form-box .MuiFormControl-root {
   width: 100% !important;
-  margin-bottom: 12px !important;
+  margin-bottom: 6px !important;
 }
 .form-box .MuiOutlinedInput-root,
 .form-box .MuiSelect-select {

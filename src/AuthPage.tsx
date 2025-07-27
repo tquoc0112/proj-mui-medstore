@@ -67,7 +67,7 @@ export default function AuthPage() {
       <div className="form-container sign-in-container">
         <form className="form-box" onSubmit={handleLogin}>
           <h1>Sign in</h1>
-          <Grid container spacing={1.5} direction="column">
+          <Grid container spacing={0.5} direction="column">
             <Grid>
               <TextField
                 label="Email"
@@ -128,7 +128,7 @@ export default function AuthPage() {
             </button>
           </div>
 
-          <Grid container spacing={1.5} direction="column">
+          <Grid container spacing={0.5} direction="column">
             <Grid>
               <TextField
                 label="Email"

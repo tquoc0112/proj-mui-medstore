@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./Auth.css";
 import {
   TextField,
@@ -30,6 +30,15 @@ export default function AuthPage() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>("info");
+
+  // ✅ Toggle class on <body> based on Sign Up state
+  useEffect(() => {
+    if (isSignUpMode) {
+      document.body.classList.add("sign-up-mode");
+    } else {
+      document.body.classList.remove("sign-up-mode");
+    }
+  }, [isSignUpMode]);
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
   const showSnackbar = (message: string, severity: AlertColor) => {
@@ -91,11 +100,10 @@ export default function AuthPage() {
               />
             </Grid>
             <Grid>
-  <div className="forgot-password">
-    <a href="#">Forgot Your Password?</a>
-  </div>
-</Grid>
-
+              <div className="forgot-password">
+                <a href="#">Forgot Your Password?</a>
+              </div>
+            </Grid>
             <Grid>
               <Button type="submit" variant="contained" fullWidth>
                 Sign In

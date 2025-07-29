@@ -2,11 +2,20 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(to right, #e2e2e2, #c9d6ff);
-  background-size: cover;
-  background-repeat: no-repeat;
+
+  /* 🌈 Gradient background that animates left ↔ right */
+  background: linear-gradient(to right, #e2e2e2, #5187ea);
+  background-size: 200% 100%;
+  background-position: left;
+  transition: background-position 0.8s ease-in-out;
+
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* When Sign Up mode is active, shift the background to the right */
+body.sign-up-mode {
+  background-position: right;
 }

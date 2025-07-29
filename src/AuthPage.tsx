@@ -9,8 +9,8 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import Grid from "@mui/material/Grid"; // ✅ Stable Grid
-import type { SelectChangeEvent } from "@mui/material/Select"; // ✅ Type chuẩn
+import Grid from "@mui/material/Grid";
+import type { SelectChangeEvent } from "@mui/material/Select";
 import MuiAlert from "@mui/material/Alert";
 import type { AlertColor } from "@mui/material/Alert";
 
@@ -91,9 +91,25 @@ export default function AuthPage() {
               />
             </Grid>
             <Grid>
+  <div className="forgot-password">
+    <a href="#">Forgot Your Password?</a>
+  </div>
+</Grid>
+
+            <Grid>
               <Button type="submit" variant="contained" fullWidth>
                 Sign In
               </Button>
+            </Grid>
+            <Grid>
+              <div className="auth-divider">
+                <span>or sign in with</span>
+              </div>
+            </Grid>
+            <Grid className="social-icons-auth">
+              <a href="#"><i className="fab fa-google"></i></a>
+              <a href="#"><i className="fab fa-facebook-f"></i></a>
+              <a href="#"><i className="fab fa-linkedin-in"></i></a>
             </Grid>
           </Grid>
         </form>
@@ -103,13 +119,11 @@ export default function AuthPage() {
       <div className="form-container sign-up-container">
         <form className="form-box" onSubmit={handleRegister}>
           <h1>Create Account</h1>
-
-          {/* ✅ ROLE TOGGLE */}
           <div className="role-toggle">
             <div
               className="slider"
               style={{
-                left: role === "CUSTOMER" ? "3px" : "calc(50% + 3px)",
+                left: role === "CUSTOMER" ? "3px" : "calc(50%)",
               }}
             />
             <button
@@ -184,30 +198,14 @@ export default function AuthPage() {
                       label="Business Type"
                       required
                     >
-                      <MenuItem value="Pharmacy / Drugstore">
-                        Pharmacy / Drugstore
-                      </MenuItem>
-                      <MenuItem value="Hospital Pharmacy">
-                        Hospital Pharmacy
-                      </MenuItem>
-                      <MenuItem value="Wholesale Distributor">
-                        Wholesale Distributor
-                      </MenuItem>
-                      <MenuItem value="Manufacturer / Pharma Company">
-                        Manufacturer / Pharma Company
-                      </MenuItem>
-                      <MenuItem value="Clinical Supplier / Medical Store">
-                        Clinical Supplier / Medical Store
-                      </MenuItem>
-                      <MenuItem value="Veterinary Pharmacy">
-                        Veterinary Pharmacy
-                      </MenuItem>
-                      <MenuItem value="Online Pharmacy">
-                        Online Pharmacy
-                      </MenuItem>
-                      <MenuItem value="Herbal / Alternative Medicine Store">
-                        Herbal / Alternative Medicine Store
-                      </MenuItem>
+                      <MenuItem value="Pharmacy / Drugstore">Pharmacy / Drugstore</MenuItem>
+                      <MenuItem value="Hospital Pharmacy">Hospital Pharmacy</MenuItem>
+                      <MenuItem value="Wholesale Distributor">Wholesale Distributor</MenuItem>
+                      <MenuItem value="Manufacturer / Pharma Company">Manufacturer / Pharma Company</MenuItem>
+                      <MenuItem value="Clinical Supplier / Medical Store">Clinical Supplier / Medical Store</MenuItem>
+                      <MenuItem value="Veterinary Pharmacy">Veterinary Pharmacy</MenuItem>
+                      <MenuItem value="Online Pharmacy">Online Pharmacy</MenuItem>
+                      <MenuItem value="Herbal / Alternative Medicine Store">Herbal / Alternative Medicine Store</MenuItem>
                       <MenuItem value="Others">Others</MenuItem>
                     </Select>
                   </FormControl>
@@ -242,12 +240,12 @@ export default function AuthPage() {
         <div className="overlay">
           <div className="overlay-panel overlay-left">
             <h1>Welcome Back!</h1>
-            <p>To keep connected, please login with your account</p>
+            <p>Log in to manage your store and serve your customers</p>
             <button onClick={() => setIsSignUpMode(false)}>Sign In</button>
           </div>
           <div className="overlay-panel overlay-right">
-            <h1>Hello, Friend!</h1>
-            <p>Enter your details and start your journey with us</p>
+            <h1>Welcome to MedStore Online</h1>
+            <p>Your trusted pharmacy marketplace — join us today</p>
             <button onClick={() => setIsSignUpMode(true)}>Sign Up</button>
           </div>
         </div>

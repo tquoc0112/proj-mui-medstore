@@ -16,28 +16,30 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #f0f2f5;
 }
 
 /* ✅ MAIN CONTAINER */
 .auth-container {
-  background-color: #fff;
+  background-color: #ffffff;
+  backdrop-filter: blur(12px);
   border-radius: 20px;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
   position: relative;
   overflow: hidden;
-  width: 960px;      /* ✅ tăng kích cỡ ngang */
+  width: 960px;
   max-width: 100%;
-  min-height: 600px; /* ✅ đủ chiều cao cho SELLER */
+  min-height: 600px;
   transition: all 0.6s ease-in-out;
-  margin: 0;         /* ✅ bỏ margin cũ */
+  margin: 0;
   display: flex;
 }
+
 
 .auth-container h1 {
   font-size: 24px;
   font-weight: bold;
   color: #1a73e8;
+  margin-bottom: 14px; /* 👈 add this */
 }
 
 .auth-container p {
@@ -166,11 +168,16 @@ body {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
-.overlay-panel h1:hover,
-.overlay-panel p:hover {
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  transition: all 0.3s ease;
+.overlay-panel h1 {
+  margin-bottom: 6px; /* reduce space below header */
 }
+
+.overlay-panel p {
+  margin-top: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
 
 .overlay-left { transform: translateX(-200%); left: 0; }
 .auth-container.sign-up-mode .overlay-left { transform: translateX(0); }
@@ -203,7 +210,7 @@ body {
   border-radius: 30px;
   padding: 3px;
   overflow: hidden;
-  height: 42px;
+  height: 45px;
 }
 
 .role-toggle button {
@@ -233,7 +240,7 @@ body {
   position: absolute;
   top: 0;
   left: 3px;
-  width: calc(50% - 6px);
+  width: calc(50%);
   height: 100%;
   background: linear-gradient(to right, #1a73e8, #3b8dff);
   border-radius: 30px;
@@ -259,7 +266,7 @@ body {
 .form-box .MuiTextField-root,
 .form-box .MuiFormControl-root {
   width: 100% !important;
-  margin-bottom: 6px !important;
+  margin-bottom: 12px !important;
 }
 .form-box .MuiOutlinedInput-root,
 .form-box .MuiSelect-select {
@@ -267,3 +274,68 @@ body {
   border-radius: 6px;
 }
 .form-box button { margin-top: 8px !important; }
+.form-box .MuiInputLabel-root {
+  font-size: 14px; /* or 13px if you want smaller */
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 16px 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #ccc;
+  margin: 0 10px;
+}
+
+.auth-divider span {
+  font-size: 12px;
+  color: #777;
+  white-space: nowrap;
+}
+
+.social-icons-auth {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.social-icons-auth a {
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  padding: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.social-icons-auth a:hover {
+  background-color: #f0f0f0;
+  color: #1a73e8;
+}
+.forgot-password {
+  text-align: right;
+  margin: 6px 0 8px 0;
+}
+
+.forgot-password a {
+  font-size: 12px;
+  color: #1a73e8;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.forgot-password a:hover {
+  text-decoration: underline;
+}

@@ -45,12 +45,35 @@ router.post("/register", async (req: Request, res: Response) => {
     const userRole = role === "SALES" ? Role.SALES : Role.CUSTOMER;
     const userStatus = userRole === Role.SALES ? Status.PENDING : Status.ACTIVE;
 
+    // ✅ Sinh mã customerId hoặc sellerId
+    const generateCustomId = async (prefix: string, modelField: "customerId" | "sellerId") => {
+      const count = await prisma.user.count({
+        where: {
+          [modelField]: { not: null },
+        },
+      });
+      const nextNumber = count + 1;
+      return `${prefix}${nextNumber.toString().padStart(3, "0")}`;
+    };
+
+    let customerId: string | null = null;
+    let sellerId: string | null = null;
+
+    if (userRole === Role.CUSTOMER) {
+      customerId = await generateCustomId("CUS", "customerId");
+    } else if (userRole === Role.SALES) {
+      sellerId = await generateCustomId("SEL", "sellerId");
+    }
+
+    // Tạo user
     await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         role: userRole,
         status: userStatus,
+        customerId,
+        sellerId,
         firstName,
         lastName,
         phone,

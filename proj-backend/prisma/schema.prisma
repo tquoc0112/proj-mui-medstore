@@ -8,33 +8,53 @@ datasource db {
 }
 
 model User {
-  id          Int      @id @default(autoincrement())
-  email       String   @unique
-  password    String
-  role        Role     @default(CUSTOMER)
-  status      Status   @default(ACTIVE) // SALES will be pending by default
+  id                Int      @id @default(autoincrement())
+  email             String   @unique
+  password          String
+  role              Role     @default(CUSTOMER)
+  status            Status   @default(ACTIVE)
 
-  firstName   String?
-  lastName    String?
-  phone       String?
-  address     String?
+  // Role-specific IDs
+  customerId        String?  @unique
+  sellerId          String?  @unique
+
+  // Common fields
+  firstName         String?
+  lastName          String?
+  phone             String?
+  address           String?
+  profilePicUrl     String?   // 👈 New
 
   // Seller-specific fields
-  storeName           String?
-  businessType        String?
-  pharmacyLicense     String?
-  licenseDocUrl       String?
-  taxId               String?
-  storeLogoUrl        String?
-  businessAddress     String?
-  ownerIdProofUrl     String?
-  proofOfAddressUrl   String?
-  medicalCertUrl      String?
-  bankName            String?
-  accountHolder       String?
-  accountNumber       String?
+  storeName         String?
+  businessType      String?
+  pharmacyLicense   String?
+  licenseDocUrl     String?
+  taxId             String?
+  storeLogoUrl      String?
+  businessAddress   String?
+  ownerIdProofUrl   String?
+  proofOfAddressUrl String?
+  medicalCertUrl    String?
+  bankName          String?
+  accountHolder     String?
+  accountNumber     String?
 
+  createdAt         DateTime @default(now())
+updatedAt DateTime @updatedAt @default(now())
+
+
+  // Relations
+  orders            Order[]  // 👈 For customer order history
+}
+
+model Order {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
   createdAt   DateTime @default(now())
+  totalAmount Float
+  status      String
 }
 
 enum Role {

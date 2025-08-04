@@ -58,6 +58,8 @@ export default function AuthPage() {
 const handleRegister = async (e: React.FormEvent) => {
   e.preventDefault();
 
+  const trimmedEmail = formData.email.trim();
+  const trimmedStoreName = formData.storeName.trim();
   if (formData.password !== formData.confirmPassword) {
     showSnackbar("Passwords do not match!", "error");
     return;
@@ -70,10 +72,10 @@ const handleRegister = async (e: React.FormEvent) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: formData.email,
+        email: trimmedEmail,
         password: formData.password,
         role: role === "SELLER" ? "SALES" : "CUSTOMER",
-        storeName: formData.storeName || null,
+        storeName: trimmedStoreName || null,
         businessType: formData.businessType || null,
       }),
     });
@@ -95,6 +97,8 @@ const handleRegister = async (e: React.FormEvent) => {
 const handleLogin = async (e: React.FormEvent) => {
   e.preventDefault();
 
+  const trimmedEmail = formData.email.trim();
+
   try {
     const res = await fetch("http://localhost:5000/api/auth/login", {
       method: "POST",
@@ -102,7 +106,7 @@ const handleLogin = async (e: React.FormEvent) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: formData.email,
+        email: trimmedEmail,
         password: formData.password,
       }),
     });
@@ -115,13 +119,11 @@ const handleLogin = async (e: React.FormEvent) => {
 
     localStorage.setItem("token", data.token); // save token
     showSnackbar("Login successful!", "success");
-
-    // You can redirect or do other things here based on role
-    // e.g. if (data.role === 'CUSTOMER') navigate("/customer/dashboard")
   } catch (error: any) {
     showSnackbar(error.message || "Login failed", "error");
   }
 };
+
 
   return (
     <div className={`auth-container ${isSignUpMode ? "sign-up-mode" : ""}`}>

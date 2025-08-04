@@ -55,20 +55,73 @@ export default function AuthPage() {
     setFormData({ ...formData, businessType: e.target.value });
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      showSnackbar("Passwords do not match!", "error");
-      return;
-    }
-    showSnackbar("Registration successful!", "success");
-    setIsSignUpMode(false);
-  };
+const handleRegister = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  if (formData.password !== formData.confirmPassword) {
+    showSnackbar("Passwords do not match!", "error");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+        role: role === "SELLER" ? "SALES" : "CUSTOMER",
+        storeName: formData.storeName || null,
+        businessType: formData.businessType || null,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Registration failed");
+    }
+
+    showSnackbar(data.message || "Registration successful!", "success");
+    setIsSignUpMode(false);
+  } catch (error: any) {
+    showSnackbar(error.message || "Registration failed", "error");
+  }
+};
+
+
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Login failed");
+    }
+
+    localStorage.setItem("token", data.token); // save token
     showSnackbar("Login successful!", "success");
-  };
+
+    // You can redirect or do other things here based on role
+    // e.g. if (data.role === 'CUSTOMER') navigate("/customer/dashboard")
+  } catch (error: any) {
+    showSnackbar(error.message || "Login failed", "error");
+  }
+};
 
   return (
     <div className={`auth-container ${isSignUpMode ? "sign-up-mode" : ""}`}>

@@ -1,69 +1,54 @@
-# React + TypeScript + Vite
+🏪 MedStore Online — Fullstack Pharmacy App
+MedStore Online is a modern web application for managing a digital pharmacy storefront. It supports two main roles: Customers and Sellers, with secure role-based authentication, profile management, and business registration support for sellers. Admin functionality is also under development.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+🔧 Tech Stack
+Frontend: React + TypeScript + Vite + MUI v7.2.0
 
-Currently, two official plugins are available:
+Backend: Node.js + Express + Prisma + TypeScript
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Database: PostgreSQL
 
-## Expanding the ESLint configuration
+Authentication: JWT (JSON Web Token)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Roles: CUSTOMER, SELLER (with approval flow), and ADMIN
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+UI Design: Soft white-blue medical theme with modern UX patterns
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+🔐 Features (In Progress)
+User Registration and Login (with role selection)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Seller onboarding with business details
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+JWT authentication and localStorage handling
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Role-based redirects and protected routes
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Profile viewing and editing (including profile pictures)
+
+Admin Dashboard (Pending)
+
+Validation of Seller accounts (Pending)
+
+📦 Folder Structure Highlights
+backend/
+├── prisma/                # Prisma schema & migrations
+├── routes/                # auth.ts, user.ts, admin.ts
+├── controllers/           # Logic for each route
+├── middleware/            # Auth middleware (e.g., verifyToken)
+└── index.ts               # Express app entry point
+
+frontend/
+├── src/
+│   ├── pages/AuthPage.tsx # Login & Register forms with animation
+│   ├── styles/Auth.css    # Custom animation CSS
+│   └── App.tsx            # Root router entry
+🧪 Status
+✅ Basic Auth complete
+✅ JWT and role-based redirects
+✅ Customer/Seller profile API
+🟨 Admin features under construction
+🟨 UI polish and validations ongoing
+
+API route documentation
+
+screenshots or deployment links

@@ -42,7 +42,16 @@ router.post("/register", async (req: Request, res: Response) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const userRole = role === "SALES" ? Role.SALES : Role.CUSTOMER;
+    let userRole: Role;
+
+if (role === "SALES") {
+  userRole = Role.SALES;
+} else if (role === "ADMIN") {
+  userRole = Role.ADMIN;
+} else {
+  userRole = Role.CUSTOMER;
+}
+
     const userStatus = userRole === Role.SALES ? Status.PENDING : Status.ACTIVE;
 
     // ✅ Sinh mã customerId hoặc sellerId

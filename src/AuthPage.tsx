@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "./Auth.css";
+
 import {
   TextField,
   Button,
@@ -13,8 +14,11 @@ import Grid from "@mui/material/Grid";
 import type { SelectChangeEvent } from "@mui/material/Select";
 import MuiAlert from "@mui/material/Alert";
 import type { AlertColor } from "@mui/material/Alert";
+import { useNavigate } from "react-router-dom";
 
 export default function AuthPage() {
+  const navigate = useNavigate();
+
   const [isSignUpMode, setIsSignUpMode] = useState(false);
   const [role, setRole] = useState<"CUSTOMER" | "SELLER">("CUSTOMER");
 
@@ -55,75 +59,89 @@ export default function AuthPage() {
     setFormData({ ...formData, businessType: e.target.value });
   };
 
-const handleRegister = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const trimmedEmail = formData.email.trim();
-  const trimmedStoreName = formData.storeName.trim();
-  if (formData.password !== formData.confirmPassword) {
-    showSnackbar("Passwords do not match!", "error");
-    return;
-  }
-
-  try {
-    const res = await fetch("http://localhost:5000/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: trimmedEmail,
-        password: formData.password,
-        role: role === "SELLER" ? "SALES" : "CUSTOMER",
-        storeName: trimmedStoreName || null,
-        businessType: formData.businessType || null,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || "Registration failed");
+    const trimmedEmail = formData.email.trim();
+    const trimmedStoreName = formData.storeName.trim();
+    if (formData.password !== formData.confirmPassword) {
+      showSnackbar("Passwords do not match!", "error");
+      return;
     }
 
-    showSnackbar(data.message || "Registration successful!", "success");
-    setIsSignUpMode(false);
-  } catch (error: any) {
-    showSnackbar(error.message || "Registration failed", "error");
-  }
-};
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: trimmedEmail,
+          password: formData.password,
+          role: role === "SELLER" ? "SALES" : "CUSTOMER",
+          storeName: trimmedStoreName || null,
+          businessType: formData.businessType || null,
+        }),
+      });
 
+      const data = await res.json();
 
-const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
+      if (!res.ok) {
+        throw new Error(data.error || "Registration failed");
+      }
 
-  const trimmedEmail = formData.email.trim();
-
-  try {
-    const res = await fetch("http://localhost:5000/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: trimmedEmail,
-        password: formData.password,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || "Login failed");
+      showSnackbar(data.message || "Registration successful!", "success");
+      setIsSignUpMode(false);
+    } catch (error: any) {
+      showSnackbar(error.message || "Registration failed", "error");
     }
+  };
 
-    localStorage.setItem("token", data.token); // save token
-    showSnackbar("Login successful!", "success");
-  } catch (error: any) {
-    showSnackbar(error.message || "Login failed", "error");
-  }
-};
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
 
+    const trimmedEmail = formData.email.trim();
+
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: trimmedEmail,
+          password: formData.password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Login failed");
+      }
+
+      // Save token + (optional) role
+      if (data.token) localStorage.setItem("token", data.token);
+      const roleFromApi: string =
+        data.role ?? data.user?.role ?? data.payload?.role ?? "";
+
+      if (roleFromApi) localStorage.setItem("role", roleFromApi);
+
+      showSnackbar("Login successful!", "success");
+
+      // Redirect based on role (accept CUSTOMER / SALES / SELLER)
+      if (roleFromApi === "CUSTOMER") {
+        navigate("/profile/customer", { replace: true });
+      } else if (roleFromApi === "SALES" || roleFromApi === "SELLER") {
+        navigate("/profile/seller", { replace: true });
+      } else {
+        // safe default
+        navigate("/profile/customer", { replace: true });
+      }
+    } catch (error: any) {
+      showSnackbar(error.message || "Login failed", "error");
+    }
+  };
 
   return (
     <div className={`auth-container ${isSignUpMode ? "sign-up-mode" : ""}`}>

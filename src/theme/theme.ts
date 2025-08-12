@@ -1,37 +1,26 @@
-import type { PaletteMode } from "@mui/material";
+import type { ThemeOptions } from "@mui/material/styles";
 
-type Level = 0 | 1 | 2 | 3;
-/** 0: light | 1: med-light | 2: med-dark | 3: dark */
-const levelToMode = (level: Level): PaletteMode =>
-  level >= 2 ? "dark" : "light";
-
-export const getDesignTokens = (level: Level) => {
-  const mode = levelToMode(level);
-  const primaryMain =
-    mode === "light"
-      ? level === 1
-        ? "#2962ff"
-        : "#1a73e8"
-      : level === 3
-      ? "#90caf9"
-      : "#64b5f6";
+export function getDesignTokens(level: 0 | 1 | 2 | 3): ThemeOptions {
+  const palette =
+    level === 0
+      ? { mode: "light" as const, primary: { main: "#1976d2" }, background: { default: "#f7f9fc", paper: "#ffffff" } }
+      : level === 1
+      ? { mode: "light" as const, primary: { main: "#1565c0" }, background: { default: "#eef2f8", paper: "#ffffff" } }
+      : level === 2
+      ? { mode: "dark" as const, primary: { main: "#90caf9" }, background: { default: "#0b0f19", paper: "#111827" } }
+      : { mode: "dark" as const, primary: { main: "#81d4fa" }, background: { default: "#0a0a0a", paper: "#111111" } };
 
   return {
-    palette: {
-      mode,
-      primary: { main: primaryMain },
-      background: {
-        default: mode === "light" ? "#f7f8fb" : "#0b1220",
-        paper: mode === "light" ? "#ffffff" : "#0f172a",
-      },
-    },
+    palette, // palette shape per docs. :contentReference[oaicite:1]{index=1}
     shape: { borderRadius: 16 },
+    typography: {
+      fontFamily: `"Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`,
+      h5: { fontWeight: 700 },
+      subtitle1: { opacity: 0.85 },
+    },
     components: {
       MuiPaper: { styleOverrides: { root: { borderRadius: 16 } } },
-      MuiAppBar: {
-        defaultProps: { elevation: 0 },
-        styleOverrides: { root: { borderRadius: 0 } },
-      },
+      MuiAppBar: { styleOverrides: { root: { borderRadius: 16 } } },
     },
   };
-};
+}

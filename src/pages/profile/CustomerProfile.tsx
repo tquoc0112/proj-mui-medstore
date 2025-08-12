@@ -1,63 +1,105 @@
-import { useContext } from "react";
+import { useContext, useMemo, useState } from "react";
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  IconButton,
-  Container,
-  Paper,
-  Avatar,
-  Stack,
-  Button,
+  AppBar, Toolbar, Typography, IconButton,
+  Container, Paper, Stepper, Step, StepLabel,
+  Button, Box, Snackbar, Alert
 } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { ThemeContext } from "../../contexts/ThemeContext";
+import AccountForm from "./AccountForm";
+import AddressForm from "./AddressForm";
+import SecurityForm from "./SecurityForm";
+import Review from "./Review";
+import type { ProfileDraft, Address } from "../../types/profile";
+
+const steps = ["Account", "Address", "Security", "Review & Save"]; // Stepper API & usage. :contentReference[oaicite:3]{index=3}
+
+const initialData: ProfileDraft = {
+  id: "CUS001",
+  email: "customer@example.com",
+  firstName: "Alex",
+  lastName: "Nguyen",
+  phone: "+84 912 345 678",
+  address: { line1: "12 Nguyen Trai", line2: "Ward 5", city: "Ho Chi Minh City", zip: "700000", country: "Vietnam" }
+};
 
 export default function CustomerProfile() {
   const { cycle } = useContext(ThemeContext);
+  const [activeStep, setActiveStep] = useState(0);
+  const [draft, setDraft] = useState<ProfileDraft>(initialData);
+  const [snack, setSnack] = useState<{ open: boolean; msg: string; sev: "success"|"error"|"info" }>({ open: false, msg: "", sev: "success" });
 
-  // Normally fetch user info with /user/me using the token.
-  const user = {
-    email: "customer@example.com",
-    profilePicUrl: "",
-    role: "CUSTOMER",
-  };
+  const setField = <K extends keyof ProfileDraft>(key: K, value: ProfileDraft[K]) =>
+    setDraft((d) => ({ ...d, [key]: value }));
+  const updateAddress = (patch: Partial<Address>) =>
+    setDraft((d) => ({ ...d, address: { ...d.address, ...patch } }));
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/";
+  const stepContent = useMemo(() => {
+    switch (activeStep) {
+      case 0: return <AccountForm draft={draft} setField={setField} />;
+      case 1: return <AddressForm address={draft.address} updateAddress={updateAddress} />;
+      case 2: return <SecurityForm email={draft.email} onResult={(ok, msg) => setSnack({ open: true, msg, sev: ok ? "success" : "error" })} />;
+      case 3: return <Review draft={draft} />;
+      default: return null;
+    }
+  }, [activeStep, draft]);
+
+  const handleLogout = () => { localStorage.removeItem("token"); window.location.href = "/"; };
+
+  const handleSaveAll = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:5000/api/user/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(draft),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "Update failed");
+      setSnack({ open: true, msg: "Profile updated.", sev: "success" });
+    } catch (e: any) {
+      setSnack({ open: true, msg: e.message || "Update failed", sev: "error" });
+    }
   };
 
   return (
     <>
       <AppBar position="sticky" color="default">
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Customer Profile
-          </Typography>
-          <IconButton onClick={cycle} aria-label="toggle theme" edge="end">
-            <Brightness4Icon />
-          </IconButton>
-          <IconButton onClick={handleLogout} aria-label="logout" edge="end" sx={{ ml: 1 }}>
-            <LogoutIcon />
-          </IconButton>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>Customer Profile</Typography>
+          <IconButton onClick={cycle} aria-label="toggle theme"><Brightness4Icon /></IconButton>
+          <IconButton onClick={handleLogout} aria-label="logout" sx={{ ml: 1 }}><LogoutIcon /></IconButton>
         </Toolbar>
       </AppBar>
 
       <Container sx={{ py: 4 }}>
-        <Paper className="fade-down" sx={{ p: 3, mx: "auto", maxWidth: 640 }}>
-          <Stack alignItems="center" spacing={2}>
-            <Avatar src={user.profilePicUrl} sx={{ width: 96, height: 96 }} />
-            <Typography variant="h5">{user.email}</Typography>
-            <Typography variant="body2">Role: {user.role}</Typography>
-            <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-              <Button variant="contained">Edit profile</Button>
-              <Button variant="outlined">Change password</Button>
-            </Stack>
-          </Stack>
+        <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, mx: "auto", maxWidth: 720, borderRadius: 3 }}>
+          <Typography component="h1" variant="h5" sx={{ fontWeight: 700, mb: 2 }}>Edit your details</Typography>
+
+          <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3 }}>
+            {steps.map((label) => (<Step key={label}><StepLabel>{label}</StepLabel></Step>))}
+          </Stepper>
+
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12 }}>{stepContent}</Grid>
+            <Grid size={{ xs: 12 }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+                <Button disabled={activeStep === 0} onClick={() => setActiveStep((s) => s - 1)}>Back</Button>
+                {activeStep < steps.length - 1 ? (
+                  <Button variant="contained" onClick={() => setActiveStep((s) => s + 1)}>Next</Button>
+                ) : (
+                  <Button variant="contained" onClick={handleSaveAll}>Save All</Button>
+                )}
+              </Box>
+            </Grid>
+          </Grid>
         </Paper>
       </Container>
+
+      <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack((s) => ({ ...s, open: false }))} anchorOrigin={{ vertical: "top", horizontal: "center" }}>
+        <Alert severity={snack.sev} onClose={() => setSnack((s) => ({ ...s, open: false }))}>{snack.msg}</Alert>
+      </Snackbar>
     </>
   );
 }

@@ -7,7 +7,7 @@ import {
 } from "react";
 import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 import { useLocation } from "react-router-dom";
-import { getDesignTokens } from "../theme/theme"; // <- make sure this file exists (below)
+import { getDesignTokens } from "../theme/theme"; // keep your existing path
 
 type Level = 0 | 1 | 2 | 3;
 
@@ -24,9 +24,8 @@ export const ThemeContext = createContext<ThemeContextType>({
 });
 
 export function ThemeContextProvider({ children }: { children: ReactNode }) {
-  const location = useLocation();
-  const isAuthPage =
-    location.pathname === "/" || location.pathname === "/register";
+  const { pathname } = useLocation();
+  const isAuthPage = pathname === "/" || pathname === "/login" || pathname === "/register";
 
   const [level, setLevel] = useState<Level>(() => {
     const s = localStorage.getItem("theme-level");
@@ -40,8 +39,8 @@ export function ThemeContextProvider({ children }: { children: ReactNode }) {
   const theme = useMemo(() => createTheme(getDesignTokens(level)), [level]);
   const cycle = () => setLevel(((level + 1) % 4) as Level);
 
+  // Do NOT wrap Auth pages in ThemeProvider (your requirement)
   if (isAuthPage) {
-    // Do NOT theme the login/register screens
     return (
       <ThemeContext.Provider value={{ level, setLevel, cycle }}>
         {children}

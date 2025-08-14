@@ -1,3 +1,5 @@
+// schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,25 +9,53 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ──────────────────────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  CUSTOMER
+  SELLER   // added to match FE wording; keep SALES for back-compat
+  SALES
+}
+
+enum Status {
+  ACTIVE
+  PENDING
+  SUSPENDED
+}
+
+// ──────────────────────────────────────────────────────────────
+// Models
+// ──────────────────────────────────────────────────────────────
+
 model User {
-  id                Int      @id @default(autoincrement())
-  email             String   @unique
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
   password          String
-  role              Role     @default(CUSTOMER)
-  status            Status   @default(ACTIVE)
+  role              Role      @default(CUSTOMER)
+  status            Status    @default(ACTIVE)
 
   // Role-specific IDs
-  customerId        String?  @unique
-  sellerId          String?  @unique
+  customerId        String?   @unique
+  sellerId          String?   @unique
 
   // Common fields
   firstName         String?
   lastName          String?
   phone             String?
-  address           String?
-  profilePicUrl     String?   // 👈 New
 
-  // Seller-specific fields
+  // Legacy single-line address (kept for compatibility)
+  address           String?
+
+  // NEW: structured address for the profile UI (line1/line2/city/zip/country)
+  addressJson       Json?
+
+  // Avatar / profile image
+  profilePicUrl     String?
+
+  // Seller-specific fields (kept)
   storeName         String?
   businessType      String?
   pharmacyLicense   String?
@@ -40,12 +70,14 @@ model User {
   accountHolder     String?
   accountNumber     String?
 
-  createdAt         DateTime @default(now())
-updatedAt DateTime @updatedAt @default(now())
-
-
   // Relations
-  orders            Order[]  // 👈 For customer order history
+  orders            Order[]
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Helpful index for admin filters/search
+  @@index([role, status], map: "idx_user_role_status")
 }
 
 model Order {
@@ -55,16 +87,6 @@ model Order {
   createdAt   DateTime @default(now())
   totalAmount Float
   status      String
-}
 
-enum Role {
-  ADMIN
-  CUSTOMER
-  SALES
-}
-
-enum Status {
-  ACTIVE
-  PENDING
-  SUSPENDED
+  @@index([userId], map: "idx_order_userId")
 }

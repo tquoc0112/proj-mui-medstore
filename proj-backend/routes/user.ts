@@ -1,140 +1,215 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { PrismaClient, Role, Status } from "@prisma/client";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import multer, { Multer } from "multer";
+import path from "path";
+import fs from "fs/promises";
 
 const router = Router();
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "default_secret";
 
-// ================== REGISTER ==================
-router.post("/register", async (req: Request, res: Response) => {
+/** ─────────────────────────────────────────────────────────────
+ *  TS augmentation so req.authUser exists on Request
+ *  (kept inside this file so ts-node definitely picks it up)
+ *  ──────────────────────────────────────────────────────────── */
+declare module "express-serve-static-core" {
+  interface Request {
+    authUser?: { id: number; role: Role; email: string; status: Status };
+    file?: Express.Multer.File;
+    files?: Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] };
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Auth middleware
+// ──────────────────────────────────────────────────────────────
+function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {
-    const {
-      email,
-      password,
-      role,
-      firstName,
-      lastName,
-      phone,
-      address,
-      storeName,
-      businessType,
-      pharmacyLicense,
-      licenseDocUrl,
-      taxId,
-      storeLogoUrl,
-      businessAddress,
-      ownerIdProofUrl,
-      proofOfAddressUrl,
-      medicalCertUrl,
-      bankName,
-      accountHolder,
-      accountNumber,
-    } = req.body;
+    const auth = String(req.headers.authorization || "");
+    const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+    if (!token) return res.status(401).json({ error: "Missing token" });
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      id: number; role: Role; email: string; status: Status; iat: number; exp: number;
+    };
+    req.authUser = { id: decoded.id, role: decoded.role, email: decoded.email, status: decoded.status };
+    next();
+  } catch {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+}
 
-    const trimmedEmail = email.trim(); // ✅ trim email
+// ──────────────────────────────────────────────────────────────
+// Address helpers
+// ──────────────────────────────────────────────────────────────
+type AddressDTO = {
+  line1?: string; line2?: string; city?: string; zip?: string; country?: string;
+} | null;
 
-    // Kiểm tra email trùng
-    const existingUser = await prisma.user.findUnique({ where: { email: trimmedEmail } });
-    if (existingUser) {
-      return res.status(400).json({ error: "Email already registered" });
-    }
+function parseAddressFromUser(u: any): AddressDTO {
+  // Prefer JSON column if present
+  const j = (u as any)?.addressJson;
+  if (j && typeof j === "object") {
+    return {
+      line1: j.line1 || "",
+      line2: j.line2 || "",
+      city: j.city || "",
+      zip: j.zip || "",
+      country: j.country || "",
+    };
+  }
+  // Fallback: try legacy string as JSON
+  if (u.address) {
+    try {
+      const parsed = JSON.parse(u.address);
+      if (parsed && typeof parsed === "object") {
+        return {
+          line1: parsed.line1 || "",
+          line2: parsed.line2 || "",
+          city: parsed.city || "",
+          zip: parsed.zip || "",
+          country: parsed.country || "",
+        };
+      }
+    } catch { /* ignore non-JSON legacy string */ }
+  }
+  return { line1: "", line2: "", city: "", zip: "", country: "" };
+}
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const userRole = role === "SALES" ? Role.SALES : Role.CUSTOMER;
-    const userStatus = userRole === Role.SALES ? Status.PENDING : Status.ACTIVE;
+function serializeAddressForDB(a: AddressDTO): { addressJson: any | null; address: string | null } {
+  if (!a) return { addressJson: null, address: null };
+  const normalized = {
+    line1: a.line1 || "",
+    line2: a.line2 || "",
+    city: a.city || "",
+    zip: a.zip || "",
+    country: a.country || "",
+  };
+  return {
+    addressJson: normalized,
+    address: JSON.stringify(normalized), // keep legacy string in sync
+  };
+}
 
-    const generateCustomId = async (prefix: string, modelField: "customerId" | "sellerId") => {
-      const count = await prisma.user.count({
-        where: { [modelField]: { not: null } },
-      });
-      const nextNumber = count + 1;
-      return `${prefix}${nextNumber.toString().padStart(3, "0")}`;
+function mapRoleForFE(role: Role): "ADMIN" | "CUSTOMER" | "SELLER" {
+  return role === Role.SALES ? "SELLER" : (role as any);
+}
+
+// ──────────────────────────────────────────────────────────────
+// GET /me  (no `select` → returns all scalar fields, including JSON)
+// ──────────────────────────────────────────────────────────────
+router.get("/me", requireAuth, async (req: Request, res: Response) => {
+  const me = await prisma.user.findUnique({ where: { id: req.authUser!.id } });
+  if (!me) return res.status(404).json({ error: "User not found" });
+
+  const address = parseAddressFromUser(me as any);
+  const roleForFE = mapRoleForFE(me.role);
+
+  const profile = {
+    id: me.id,
+    email: me.email,
+    role: roleForFE,
+    firstName: me.firstName || "",
+    lastName: me.lastName || "",
+    phone: me.phone || "",
+    avatarUrl: me.profilePicUrl || "",
+    address,
+    storeName: me.storeName || "",
+    businessType: me.businessType || "",
+  };
+
+  return res.json({ role: roleForFE, profile });
+});
+
+// ──────────────────────────────────────────────────────────────
+// PUT /me
+// ──────────────────────────────────────────────────────────────
+router.put("/me", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const body = req.body as {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      address?: AddressDTO;
+      storeName?: string;
+      businessType?: string;
     };
 
-    let customerId: string | null = null;
-    let sellerId: string | null = null;
+    const updates: any = {
+      firstName: body.firstName ?? undefined,
+      lastName: body.lastName ?? undefined,
+      phone: body.phone ?? undefined,
+      storeName: body.storeName ?? undefined,
+      businessType: body.businessType ?? undefined,
+    };
 
-    if (userRole === Role.CUSTOMER) {
-      customerId = await generateCustomId("CUS", "customerId");
-    } else if (userRole === Role.SALES) {
-      sellerId = await generateCustomId("SEL", "sellerId");
+    if (body.address) {
+      const { addressJson, address } = serializeAddressForDB(body.address);
+      updates.addressJson = addressJson;
+      updates.address = address;
     }
 
-    await prisma.user.create({
-      data: {
-        email: trimmedEmail,
-        password: hashedPassword,
-        role: userRole,
-        status: userStatus,
-        customerId,
-        sellerId,
-        firstName,
-        lastName,
-        phone,
-        address,
-        storeName,
-        businessType,
-        pharmacyLicense,
-        licenseDocUrl,
-        taxId,
-        storeLogoUrl,
-        businessAddress,
-        ownerIdProofUrl,
-        proofOfAddressUrl,
-        medicalCertUrl,
-        bankName,
-        accountHolder,
-        accountNumber,
-      },
-    });
+    await prisma.user.update({ where: { id: req.authUser!.id }, data: updates });
 
-    res.status(201).json({
-      message:
-        userRole === Role.SALES
-          ? "Seller registered successfully. Pending admin approval."
-          : "User registered successfully",
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Something went wrong" });
+    // fetch full user (no select)
+    const updated = await prisma.user.findUnique({ where: { id: req.authUser!.id } });
+
+    const address = parseAddressFromUser(updated as any);
+    const roleForFE = mapRoleForFE(updated!.role);
+    const profile = {
+      id: updated!.id,
+      email: updated!.email,
+      role: roleForFE,
+      firstName: updated!.firstName || "",
+      lastName: updated!.lastName || "",
+      phone: updated!.phone || "",
+      avatarUrl: updated!.profilePicUrl || "",
+      address,
+      storeName: updated!.storeName || "",
+      businessType: updated!.businessType || "",
+    };
+
+    return res.json({ message: "Profile updated", profile });
+  } catch (e) {
+    console.error("PUT /me error:", e);
+    return res.status(500).json({ error: "Update failed" });
   }
 });
 
-// ================== LOGIN ==================
-router.post("/login", async (req: Request, res: Response) => {
+// ──────────────────────────────────────────────────────────────
+// POST /avatar  (multipart/form-data)
+// ──────────────────────────────────────────────────────────────
+const AVATAR_DIR = path.join(process.cwd(), "uploads", "avatars");
+
+const storage = multer.diskStorage({
+  destination: async (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
+    try {
+      await fs.mkdir(AVATAR_DIR, { recursive: true });
+      cb(null, AVATAR_DIR);
+    } catch (err: any) {
+      cb(err, AVATAR_DIR);
+    }
+  },
+  filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
+    const ext = path.extname(file.originalname) || ".jpg";
+    const safe = `${req.authUser?.id || "u"}_${Date.now()}${ext}`;
+    cb(null, safe);
+  },
+});
+const upload: Multer = multer({ storage });
+
+router.post("/avatar", requireAuth, upload.single("avatar"), async (req: Request, res: Response) => {
   try {
-    const trimmedEmail = req.body.email.trim(); // ✅ trim email
-    const { password } = req.body;
+    const file = req.file as Express.Multer.File | undefined;
+    if (!file) return res.status(400).json({ error: "No file uploaded" });
 
-    const user = await prisma.user.findUnique({ where: { email: trimmedEmail } });
-    if (!user) return res.status(400).json({ error: "Invalid email or password" });
+    const relative = `/uploads/avatars/${file.filename}`;
+    await prisma.user.update({ where: { id: req.authUser!.id }, data: { profilePicUrl: relative } });
 
-    if (user.role === "SALES" && user.status !== Status.ACTIVE) {
-      return res.status(403).json({ error: "Your account is pending admin approval." });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(400).json({ error: "Invalid email or password" });
-    }
-
-    const token = jwt.sign(
-      {
-        id: user.id,
-        role: user.role,
-        email: user.email,
-        status: user.status,
-      },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.json({ message: "Login successful", token, role: user.role });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Something went wrong" });
+    return res.json({ message: "Avatar uploaded", url: relative, avatarUrl: relative });
+  } catch (e) {
+    console.error("POST /avatar error:", e);
+    return res.status(500).json({ error: "Upload failed" });
   }
 });
 

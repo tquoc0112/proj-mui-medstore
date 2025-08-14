@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   AppBar, Toolbar, Typography, IconButton, Container, Paper,
-  Avatar, Button, Stack, TextField, Divider, Snackbar, Alert
+  Avatar, Button, Stack, TextField, Divider, Snackbar, Alert, Box
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -101,35 +101,42 @@ export default function SellerProfile() {
 
       <Container sx={{ py: 3 }}>
         <Grid container spacing={2}>
-          <Grid>
-            <Avatar src={draft.avatarUrl || undefined} sx={{ width: 72, height: 72 }}>
-              {draft.firstName?.[0] || draft.email[0]?.toUpperCase()}
-            </Avatar>
-          </Grid>
-          <Grid size="grow">
-            <Typography variant="h6">
-              {`${draft.firstName || ""} ${draft.lastName || ""}`.trim() || "Unnamed"}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {draft.role} — {draft.id}
-            </Typography>
-          </Grid>
-          <Grid>
-            <input
-              id="pick-avatar-seller"
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(e)=>{ const f=e.target.files?.[0]; if (f) uploadAvatar(f); }}
-            />
-            <label htmlFor="pick-avatar-seller">
-              <Button variant="outlined" startIcon={<PhotoCamera />} component="span">
-                Change photo
-              </Button>
-            </label>
+          {/* Header row wrapped in its own full-width item */}
+          <Grid size={12}>
+            <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
+              <Grid container spacing={2} alignItems="center">
+                <Grid>
+                  <Avatar src={draft.avatarUrl || undefined} sx={{ width: 72, height: 72 }}>
+                    {draft.firstName?.[0] || draft.email[0]?.toUpperCase()}
+                  </Avatar>
+                </Grid>
+                <Grid size="grow">
+                  <Typography variant="h6">
+                    {`${draft.firstName || ""} ${draft.lastName || ""}`.trim() || "Unnamed"}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {draft.role} — {draft.id}
+                  </Typography>
+                </Grid>
+                <Grid>
+                  <input
+                    id="pick-avatar-seller"
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e)=>{ const f=e.target.files?.[0]; if (f) uploadAvatar(f); }}
+                  />
+                  <label htmlFor="pick-avatar-seller">
+                    <Button variant="outlined" startIcon={<PhotoCamera />} component="span">
+                      Change photo
+                    </Button>
+                  </label>
+                </Grid>
+              </Grid>
+            </Paper>
           </Grid>
 
-          {/* Store info */}
+          {/* Left column: Store + Contact + Address */}
           <Grid size={{ xs: 12, md: 8 }}>
             <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
@@ -232,7 +239,7 @@ export default function SellerProfile() {
             </Paper>
           </Grid>
 
-          {/* Security */}
+          {/* Right column: Security */}
           <Grid size={{ xs: 12, md: 4 }}>
             <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
@@ -259,9 +266,11 @@ export default function SellerProfile() {
           </Grid>
 
           {/* Footer actions */}
-          <Grid size={12} sx={{ display:"flex", gap:2, justifyContent:"flex-end" }}>
-            <Button onClick={()=>setDraft(me!)}>Reset</Button>
-            <Button variant="contained" onClick={saveAll}>Save changes</Button>
+          <Grid size={12}>
+            <Box sx={{ display:"flex", gap:2, justifyContent:"flex-end" }}>
+              <Button onClick={()=>setDraft(me!)}>Reset</Button>
+              <Button variant="contained" onClick={saveAll}>Save changes</Button>
+            </Box>
           </Grid>
         </Grid>
       </Container>

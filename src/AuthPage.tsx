@@ -35,27 +35,11 @@ export default function AuthPage() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>("info");
 
-  // Toggle class on <body> based on Sign Up state
+  // Toggle auth page mode class
   useEffect(() => {
-    if (isSignUpMode) {
-      document.body.classList.add("sign-up-mode");
-    } else {
-      document.body.classList.remove("sign-up-mode");
-    }
+    if (isSignUpMode) document.body.classList.add("sign-up-mode");
+    else document.body.classList.remove("sign-up-mode");
   }, [isSignUpMode]);
-
-  // If already logged in, bounce to the correct landing
-  useEffect(() => {
-    const existingRole = localStorage.getItem("role") || "";
-    const token = localStorage.getItem("token") || "";
-    if (token) {
-      if (existingRole === "ADMIN") navigate("/admin", { replace: true });
-      else if (existingRole === "SALES" || existingRole === "SELLER")
-        navigate("/profile/seller", { replace: true });
-      else if (existingRole === "CUSTOMER")
-        navigate("/profile/customer", { replace: true });
-    }
-  }, [navigate]);
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
   const showSnackbar = (message: string, severity: AlertColor) => {
@@ -114,32 +98,27 @@ export default function AuthPage() {
       const res = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: trimmedEmail,
-          password: formData.password,
-        }),
+        body: JSON.stringify({ email: trimmedEmail, password: formData.password }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed");
 
-      // Save token + role
+      // persist token/role
       if (data.token) localStorage.setItem("token", data.token);
       const roleFromApi: string =
         data.role ?? data.user?.role ?? data.payload?.role ?? "";
+
       if (roleFromApi) localStorage.setItem("role", roleFromApi);
 
       showSnackbar("Login successful!", "success");
 
-      // Redirect based on role (ADMIN -> dashboard)
+      // 👉 Redirect by role
       if (roleFromApi === "ADMIN") {
         navigate("/admin", { replace: true });
-      } else if (roleFromApi === "CUSTOMER") {
-        navigate("/profile/customer", { replace: true });
       } else if (roleFromApi === "SALES" || roleFromApi === "SELLER") {
         navigate("/profile/seller", { replace: true });
       } else {
-        // safe default
         navigate("/profile/customer", { replace: true });
       }
     } catch (error: any) {
@@ -149,7 +128,7 @@ export default function AuthPage() {
 
   return (
     <div className={`auth-container ${isSignUpMode ? "sign-up-mode" : ""}`}>
-      {/* SIGN IN FORM */}
+      {/* Sign in */}
       <div className="form-container sign-in-container">
         <form className="form-box" onSubmit={handleLogin}>
           <h1>Sign in</h1>
@@ -192,15 +171,15 @@ export default function AuthPage() {
               </div>
             </Grid>
             <Grid className="social-icons-auth">
-              <a href="#"><i className="fab fa-google"></i></a>
-              <a href="#"><i className="fab fa-facebook-f"></i></a>
-              <a href="#"><i className="fab fa-linkedin-in"></i></a>
+              <a href="#"><i className="fab fa-google" /></a>
+              <a href="#"><i className="fab fa-facebook-f" /></a>
+              <a href="#"><i className="fab fa-linkedin-in" /></a>
             </Grid>
           </Grid>
         </form>
       </div>
 
-      {/* SIGN UP FORM */}
+      {/* Sign up */}
       <div className="form-container sign-up-container">
         <form className="form-box" onSubmit={handleRegister}>
           <h1>Create Account</h1>
@@ -318,7 +297,7 @@ export default function AuthPage() {
         </form>
       </div>
 
-      {/* BLUE PANEL */}
+      {/* Overlay */}
       <div className="overlay-container">
         <div className="overlay">
           <div className="overlay-panel overlay-left">
@@ -334,7 +313,7 @@ export default function AuthPage() {
         </div>
       </div>
 
-      {/* SNACKBAR */}
+      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}

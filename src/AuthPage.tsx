@@ -35,7 +35,7 @@ export default function AuthPage() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>("info");
 
-  // ✅ Toggle class on <body> based on Sign Up state
+  // Toggle class on <body> based on Sign Up state
   useEffect(() => {
     if (isSignUpMode) {
       document.body.classList.add("sign-up-mode");
@@ -43,6 +43,19 @@ export default function AuthPage() {
       document.body.classList.remove("sign-up-mode");
     }
   }, [isSignUpMode]);
+
+  // If already logged in, bounce to the correct landing
+  useEffect(() => {
+    const existingRole = localStorage.getItem("role") || "";
+    const token = localStorage.getItem("token") || "";
+    if (token) {
+      if (existingRole === "ADMIN") navigate("/admin", { replace: true });
+      else if (existingRole === "SALES" || existingRole === "SELLER")
+        navigate("/profile/seller", { replace: true });
+      else if (existingRole === "CUSTOMER")
+        navigate("/profile/customer", { replace: true });
+    }
+  }, [navigate]);
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
   const showSnackbar = (message: string, severity: AlertColor) => {
@@ -72,9 +85,7 @@ export default function AuthPage() {
     try {
       const res = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: trimmedEmail,
           password: formData.password,
@@ -85,10 +96,7 @@ export default function AuthPage() {
       });
 
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Registration failed");
-      }
+      if (!res.ok) throw new Error(data.error || "Registration failed");
 
       showSnackbar(data.message || "Registration successful!", "success");
       setIsSignUpMode(false);
@@ -105,9 +113,7 @@ export default function AuthPage() {
     try {
       const res = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: trimmedEmail,
           password: formData.password,
@@ -115,22 +121,20 @@ export default function AuthPage() {
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Login failed");
 
-      if (!res.ok) {
-        throw new Error(data.error || "Login failed");
-      }
-
-      // Save token + (optional) role
+      // Save token + role
       if (data.token) localStorage.setItem("token", data.token);
       const roleFromApi: string =
         data.role ?? data.user?.role ?? data.payload?.role ?? "";
-
       if (roleFromApi) localStorage.setItem("role", roleFromApi);
 
       showSnackbar("Login successful!", "success");
 
-      // Redirect based on role (accept CUSTOMER / SALES / SELLER)
-      if (roleFromApi === "CUSTOMER") {
+      // Redirect based on role (ADMIN -> dashboard)
+      if (roleFromApi === "ADMIN") {
+        navigate("/admin", { replace: true });
+      } else if (roleFromApi === "CUSTOMER") {
         navigate("/profile/customer", { replace: true });
       } else if (roleFromApi === "SALES" || roleFromApi === "SELLER") {
         navigate("/profile/seller", { replace: true });
@@ -145,7 +149,7 @@ export default function AuthPage() {
 
   return (
     <div className={`auth-container ${isSignUpMode ? "sign-up-mode" : ""}`}>
-      {/* ✅ SIGN IN FORM */}
+      {/* SIGN IN FORM */}
       <div className="form-container sign-in-container">
         <form className="form-box" onSubmit={handleLogin}>
           <h1>Sign in</h1>
@@ -196,16 +200,14 @@ export default function AuthPage() {
         </form>
       </div>
 
-      {/* ✅ SIGN UP FORM */}
+      {/* SIGN UP FORM */}
       <div className="form-container sign-up-container">
         <form className="form-box" onSubmit={handleRegister}>
           <h1>Create Account</h1>
           <div className="role-toggle">
             <div
               className="slider"
-              style={{
-                left: role === "CUSTOMER" ? "3px" : "calc(50%)",
-              }}
+              style={{ left: role === "CUSTOMER" ? "3px" : "calc(50%)" }}
             />
             <button
               type="button"
@@ -316,7 +318,7 @@ export default function AuthPage() {
         </form>
       </div>
 
-      {/* ✅ BLUE PANEL */}
+      {/* BLUE PANEL */}
       <div className="overlay-container">
         <div className="overlay">
           <div className="overlay-panel overlay-left">
@@ -332,18 +334,14 @@ export default function AuthPage() {
         </div>
       </div>
 
-      {/* ✅ SNACKBAR */}
+      {/* SNACKBAR */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <MuiAlert
-          onClose={handleSnackbarClose}
-          severity={snackbarSeverity}
-          sx={{ width: "100%" }}
-        >
+        <MuiAlert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: "100%" }}>
           {snackbarMessage}
         </MuiAlert>
       </Snackbar>

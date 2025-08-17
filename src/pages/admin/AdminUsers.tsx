@@ -91,7 +91,7 @@ export default function AdminUsers() {
   }, [pagination.page, pagination.pageSize]);
 
   return (
-    <Paper sx={{ p: 2, borderRadius: 3 }}>
+    <Paper sx={{ p: 2, borderRadius: 1 }}>
       <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Users
